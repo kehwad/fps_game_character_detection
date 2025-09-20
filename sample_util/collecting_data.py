@@ -2,10 +2,20 @@ import time
 import mss, cv2, win32api, os
 import os
 import numpy as np
+import re
 from pynput import mouse, keyboard
 from threading import Thread
 from multiprocessing import Manager
 from PIL import ImageGrab
+
+def sanitize_filename(filename):
+    """Sanitize filename to prevent path traversal attacks"""
+    # Remove any directory separators and special characters
+    filename = re.sub(r'[<>:"/\\|?*]', '', str(filename))
+    # Limit length to prevent filesystem issues
+    filename = filename[:50] if len(filename) > 50 else filename
+    return filename
+
 class MouseListener():
     def __init__(self, share_dict):
         self.share_dict = share_dict
@@ -66,11 +76,17 @@ def screenshot(share_dict):
         img = np.array(img)
         if share_dict['intercept']:
             if share_dict['tag'] == 0:
-                file_name = str(time.time())
-                cv2.imwrite('./data/QF/' + str(file_name) + '.jpg', img)
+                file_name = sanitize_filename(str(time.time()))
+                output_path = os.path.join('./data/QF', f'{file_name}.jpg')
+                # Ensure the directory exists and path is safe
+                os.makedirs('./data/QF', exist_ok=True)
+                cv2.imwrite(output_path, img)
             elif share_dict['tag'] == float(1):
-                file_name = str(time.time())
-                cv2.imwrite('./data/BW/' + str(file_name) + '.jpg', img)
+                file_name = sanitize_filename(str(time.time()))
+                output_path = os.path.join('./data/BW', f'{file_name}.jpg')
+                # Ensure the directory exists and path is safe
+                os.makedirs('./data/BW', exist_ok=True)
+                cv2.imwrite(output_path, img)
             share_dict['intercept'] = False
             # cv2.imshow('screenshot img', img)
             cv2.waitKey(1)

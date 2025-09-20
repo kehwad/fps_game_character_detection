@@ -1,5 +1,18 @@
 ## fps_game_character_detection
 
+### 📢 重要更新 / Important Updates
+
+**🔒 安全更新 v1.1.0**：
+- 修复了关键安全漏洞（eval函数注入风险）
+- 增强了文件路径安全性
+- 添加了输入验证机制
+- 详见 [安全更新说明](SECURITY_UPDATES.md)
+
+**🎮 游戏适配指南**：
+- 新增其他游戏适配完整指南
+- 提供模板配置文件
+- 详见 [游戏适配指南](GAME_ADAPTATION_GUIDE.md)
+
 ### 介绍：
 本项目为CF网游，人物角色识别定位模型，采用yolov5框架实现，仅供学习研究使用。
 
@@ -89,3 +102,32 @@ python predict.py
 ```
 
 会连续截屏，并在定位到目标后，等待“鼠标右键”点击，如果捕获到右键，则会自动移动鼠标到目标位置
+
+## 📖 扩展文档 / Extended Documentation
+
+### 🎯 适配其他游戏 / Adapting to Other Games
+详细的游戏适配指南：[GAME_ADAPTATION_GUIDE.md](GAME_ADAPTATION_GUIDE.md)
+
+包括但不限于：
+- Counter-Strike: Global Offensive
+- Valorant  
+- Apex Legends
+- Rainbow Six Siege
+- 其他FPS游戏的适配方法
+
+### 🔒 安全更新 / Security Updates
+查看最新的安全修复和改进：[SECURITY_UPDATES.md](SECURITY_UPDATES.md)
+
+### 📁 模板文件 / Template Files
+在 `templates/` 目录下提供了：
+- 各种游戏的配置文件模板
+- 通用数据收集脚本模板
+- 训练参数配置示例
+
+## ⚠️ 免责声明 / Disclaimer
+
+本项目仅供学习和研究使用。使用前请：
+1. 阅读并遵守游戏的服务条款
+2. 仅在私人服务器或练习模式下测试
+3. 不要在正式比赛或排位模式中使用
+4. 遵守当地法律法规

@@ -7,6 +7,7 @@ Usage:
 """
 
 import argparse
+import ast
 import contextlib
 import os
 import platform
@@ -28,6 +29,77 @@ from utils.general import LOGGER, check_version, check_yaml, make_divisible, pri
 from utils.plots import feature_visualization
 from utils.torch_utils import (fuse_conv_and_bn, initialize_weights, model_info, profile, scale_img, select_device,
                                time_sync)
+
+# Safe mappings to replace eval() calls
+ACTIVATION_MAP = {
+    'nn.SiLU()': nn.SiLU(),
+    'nn.ReLU()': nn.ReLU(),
+    'nn.LeakyReLU(0.1)': nn.LeakyReLU(0.1),
+    'nn.Hardswish()': nn.Hardswish(),
+    'nn.Mish()': nn.Mish(),
+    'SiLU()': nn.SiLU(),
+    'ReLU()': nn.ReLU(),
+    'LeakyReLU(0.1)': nn.LeakyReLU(0.1),
+    'Hardswish()': nn.Hardswish(),
+    'Mish()': nn.Mish(),
+}
+
+MODULE_MAP = {
+    'Conv': Conv,
+    'DWConv': DWConv,
+    'DWConvTranspose2d': DWConvTranspose2d,
+    'GhostConv': GhostConv,
+    'Bottleneck': Bottleneck,
+    'GhostBottleneck': GhostBottleneck,
+    'SPP': SPP,
+    'SPPF': SPPF,
+    'MixConv2d': MixConv2d,
+    'Focus': Focus,
+    'CrossConv': CrossConv,
+    'BottleneckCSP': BottleneckCSP,
+    'C3': C3,
+    'C3TR': C3TR,
+    'C3SPP': C3SPP,
+    'C3Ghost': C3Ghost,
+    'C3x': C3x,
+    'Concat': Concat,
+    'Detect': Detect,
+    'Segment': Segment,
+    'Contract': Contract,
+    'Expand': Expand,
+    'nn.ConvTranspose2d': nn.ConvTranspose2d,
+    'nn.BatchNorm2d': nn.BatchNorm2d,
+    'nn.Upsample': nn.Upsample,
+}
+
+def safe_eval(expr, allowed_names=None):
+    """Safely evaluate expressions using whitelisted names"""
+    if not isinstance(expr, str):
+        return expr
+    
+    # Try to parse as literal first
+    try:
+        return ast.literal_eval(expr)
+    except (ValueError, SyntaxError):
+        pass
+    
+    # Check against allowed mappings
+    if allowed_names:
+        if expr in allowed_names:
+            return allowed_names[expr]
+    
+    # If it's a simple numeric or boolean expression, try to evaluate safely
+    try:
+        # Only allow safe expressions with numbers, basic operators, and brackets
+        safe_chars = set('0123456789+-*/().[], ')
+        if all(c in safe_chars for c in expr):
+            return ast.literal_eval(expr)
+    except (ValueError, SyntaxError):
+        pass
+    
+    # If we can't safely evaluate, return the string as-is and log a warning
+    LOGGER.warning(f"Could not safely evaluate expression: {expr}")
+    return expr
 
 try:
     import thop  # for FLOPs computation
@@ -301,17 +373,17 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
     LOGGER.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
     anchors, nc, gd, gw, act = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple'], d.get('activation')
     if act:
-        Conv.default_act = eval(act)  # redefine default activation, i.e. Conv.default_act = nn.SiLU()
+        Conv.default_act = ACTIVATION_MAP.get(act, safe_eval(act, ACTIVATION_MAP))  # Safe activation lookup
         LOGGER.info(f"{colorstr('activation:')} {act}")  # print
     na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
 
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
     for i, (f, n, m, args) in enumerate(d['backbone'] + d['head']):  # from, number, module, args
-        m = eval(m) if isinstance(m, str) else m  # eval strings
+        m = MODULE_MAP.get(m, safe_eval(m, MODULE_MAP)) if isinstance(m, str) else m  # Safe module lookup
         for j, a in enumerate(args):
             with contextlib.suppress(NameError):
-                args[j] = eval(a) if isinstance(a, str) else a  # eval strings
+                args[j] = safe_eval(a) if isinstance(a, str) else a  # Safe argument evaluation
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in {
