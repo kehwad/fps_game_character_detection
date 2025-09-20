@@ -1,0 +1,17 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# Apex Legends dataset configuration
+# Example usage: python train.py --data apex.yaml
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: ../apex_data  # dataset root dir
+train: images/train  # train images (relative to 'path')
+val: images/val      # val images (relative to 'path')
+test:  # test images (optional)
+
+# Classes - Note: Apex is battle royale so mainly enemy detection
+names:
+  0: Enemy_Player    # Enemy players/legends
+  1: Teammate       # Friendly teammates (if applicable)
+
+# Download script/URL (optional)
+# download: https://example.com/apex_dataset.zip

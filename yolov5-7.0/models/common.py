@@ -370,7 +370,7 @@ class DetectMultiBackend(nn.Module):
             output_names = [x.name for x in session.get_outputs()]
             meta = session.get_modelmeta().custom_metadata_map  # metadata
             if 'stride' in meta:
-                stride, names = int(meta['stride']), eval(meta['names'])
+                stride, names = int(meta['stride']), ast.literal_eval(meta['names'])
         elif xml:  # OpenVINO
             LOGGER.info(f'Loading {w} for OpenVINO inference...')
             check_requirements('openvino')  # requires openvino-dev: https://pypi.org/project/openvino-dev/

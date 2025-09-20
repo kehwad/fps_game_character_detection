@@ -1,0 +1,17 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# Valorant dataset configuration
+# Example usage: python train.py --data valorant.yaml
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: ../valorant_data  # dataset root dir
+train: images/train  # train images (relative to 'path')
+val: images/val      # val images (relative to 'path')
+test:  # test images (optional)
+
+# Classes
+names:
+  0: Enemy    # Enemy team agents
+  1: Ally     # Friendly team agents
+
+# Download script/URL (optional)
+# download: https://example.com/valorant_dataset.zip
